@@ -1,0 +1,48 @@
+func resourceLogicalEquipmentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+    // Retrieve the values from the resource data
+    username := d.Get("username").(string)
+    password := d.Get("password").(string)
+    hostname := d.Get("hostname").(string)
+    attributes := d.Get("attributes").([]interface{})
+
+    // Create the SOAP request payload
+    payload := []byte(`<soapenv:Envelope xmlns:soapenv='http://url' xmlns:web='http://url2'>
+                          <soapenv:Body>
+                              <web:createLogicalEquipement>
+                                  <web:userName>` + username + `</web:userName>
+                                  <web:userPassword>` + password + `</web:userPassword>
+                                  <web:attributes>` + hostname + `</web:attributes>
+                                  <web:attributes>` + attributes[0].(string) + `</web:attributes>
+                                  <web:attributes>` + attributes[1].(string) + `</web:attributes>
+                                  <web:attributes>` + attributes[2].(string) + `</web:attributes>
+                                  <web:attributes>` + attributes[3].(string) + `</web:attributes>
+                              </web:createLogicalEquipement>
+                          </soapenv:Body>
+                      </soapenv:Envelope>`)
+
+    // Make the SOAP API call
+    client := &http.Client{}
+    req, err := http.NewRequest("POST", "http://url/endpoint", bytes.NewBuffer(payload))
+    if err != nil {
+        return diag.FromErr(err)
+    }
+    req.Header.Set("Content-Type", "text/xml")
+
+    resp, err := client.Do(req)
+    if err != nil {
+        return diag.FromErr(err)
+    }
+    defer resp.Body.Close()
+
+    // Check the response status code
+    if resp.StatusCode != http.StatusOK {
+        return diag.Errorf("SOAP API call failed with status code %d", resp.StatusCode)
+    }
+
+    // Optionally, you can read and parse the response body if it contains relevant data
+
+    // Set the resource ID to mark it as created
+    d.SetId("<generated-resource-id>")
+
+    return nil
+}
